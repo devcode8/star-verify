@@ -14,8 +14,17 @@ def load_verified_users():
     
     try:
         df = pd.read_csv(CSV_FILE)
-        # Remove empty rows
+        # Remove empty rows and strip whitespace
         df = df.dropna(subset=['username'])
+        df['username'] = df['username'].str.strip()
+        # Remove rows where username is empty string after stripping
+        df = df[df['username'] != '']
+        # Create a temporary column for case-insensitive duplicate removal
+        df['username_lower'] = df['username'].str.lower()
+        # Remove case-insensitive duplicate usernames (keep first occurrence)
+        df = df.drop_duplicates(subset=['username_lower'], keep='first')
+        # Drop the temporary column
+        df = df.drop('username_lower', axis=1)
         return df
     except (pd.errors.EmptyDataError, FileNotFoundError):
         return pd.DataFrame()
